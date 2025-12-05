@@ -1,70 +1,27 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+// frontend/src/socket.js
+import { io } from "socket.io-client";
 
-export default function Register() {
-  const navigate = useNavigate();
+// Pick backend URL (Render for production OR localhost for dev)
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+const socket = io(BACKEND_URL, {
+  autoConnect: false,
+  transports: ["websocket"],
+});
 
-  async function handleRegister(e) {
-    e.preventDefault();
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Registration failed");
-        return;
-      }
-
-      alert("Account created!");
-      navigate("/login");
-    } catch (err) {
-      setError("Server error");
-    }
-  }
-
-  return (
-    <div className="auth-container">
-      <h2>Register</h2>
-
-      <form onSubmit={handleRegister} className="auth-form">
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button type="submit">Register</button>
-
-        {error && <p className="error">{error}</p>}
-      </form>
-
-      <p>Already have an account? <Link to="/login">Login</Link></p>
-    </div>
-  );
+// helper: attach token and connect
+export function connectSocketWithToken(token) {
+  socket.auth = { token };
+  socket.connect();
 }
+
+// helper: disconnect cleanly
+export function disconnectSocket() {
+  try {
+    socket.disconnect();
+  } catch (e) {}
+}
+
+export default socket;
+
