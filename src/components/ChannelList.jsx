@@ -4,9 +4,10 @@ export default function ChannelList({ onSelect }) {
   const [channels, setChannels] = useState([]);
 
   async function loadChannels() {
-    const res = await fetch("http://localhost:5000/api/channels", {
-      headers: { Authorization: localStorage.getItem("token") }
-    });
+   const res = await fetch("https://realtime-chat-backend-jrp0.onrender.com/api/channels", {
+  headers: { Authorization: localStorage.getItem("token") }
+});
+
     const data = await res.json();
     setChannels(data);
   }
