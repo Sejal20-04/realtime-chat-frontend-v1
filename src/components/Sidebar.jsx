@@ -11,9 +11,10 @@ export default function Sidebar({ currentChannel, onChannelSelect }) {
     async function load() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/channels", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch("https://realtime-chat-backend-jrp0.onrender.com/api/channels", {
+  headers: { Authorization: localStorage.getItem("token") }
+});
+
         if (!res.ok) throw new Error("Unauthorized or failed");
         const data = await res.json();
         setChannels(data);
