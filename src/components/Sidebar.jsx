@@ -4,41 +4,55 @@ import socket from "../socket";
 
 export default function Sidebar({ currentChannel, onChannelSelect }) {
   const [channels, setChannels] = useState([]);
-  const [newChannel, setNewChannel] = useState("");   // ✅ FIXED
+  const [newChannel, setNewChannel] = useState("");
 
-  // fetch channel list via REST (requires token)
   useEffect(() => {
     async function load() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("https://realtime-chat-backend-jrp0.onrender.com/api/channels", {
-  headers: { Authorization: localStorage.getItem("token") }
-});
 
-        if (!res.ok) throw new Error("Unauthorized or failed");
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/api/channels`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        if (!res.ok) throw new Error("Unauthorized");
         const data = await res.json();
         setChannels(data);
       } catch (err) {
         console.error("load channels failed", err);
       }
     }
-    load();
 
-    socket.on("channel_list_updated", () => load());
-    return () => socket.off("channel_list_updated");
+    load();
+    socket.on("channel_list_updated", load);
+
+    return () => socket.off("channel_list_updated", load);
   }, []);
 
   async function createChannel(e) {
-    e?.preventDefault();
+    e.preventDefault();
     if (!newChannel.trim()) return;
+
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/channels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: newChannel.trim() })
-      });
+
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/channels`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ name: newChannel.trim() })
+        }
+      );
+
       const data = await res.json();
+
       if (res.ok) {
         setChannels(prev => [...prev, data]);
         setNewChannel("");
@@ -54,7 +68,7 @@ export default function Sidebar({ currentChannel, onChannelSelect }) {
   function handleSelect(ch) {
     if (currentChannel) socket.emit("leave_channel", currentChannel);
     socket.emit("join_channel", ch._id);
-    onChannelSelect(ch._id);
+    onChannelSelect(ch);
   }
 
   return (
@@ -62,13 +76,13 @@ export default function Sidebar({ currentChannel, onChannelSelect }) {
       <h2 style={styles.title}>Channels</h2>
 
       <ul style={styles.list}>
-        {channels.map((ch) => (
+        {channels.map(ch => (
           <li
             key={ch._id}
             onClick={() => handleSelect(ch)}
             style={{
               ...styles.channelItem,
-              ...(currentChannel === ch._id ? styles.activeChannel : {})
+              ...(currentChannel?._id === ch._id ? styles.activeChannel : {})
             }}
           >
             <span># {ch.name}</span>
@@ -154,3 +168,4 @@ const styles = {
     fontWeight: "bold",
   }
 };
+
