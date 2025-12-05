@@ -13,14 +13,17 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://realtime-chat-backend-jrp0.onrender.com/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emailOrUsername,
-          password
-        })
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            emailOrUsername,
+            password
+          })
+        }
+      );
 
       const data = await res.json();
 
@@ -30,26 +33,17 @@ export default function Login() {
       }
 
       // Save token
-      
-      // 🔥 IMPORTANT: Save user info
-      // Save token
-localStorage.setItem("token", data.token);
+      localStorage.setItem("token", data.token);
 
-// Save full user (IMPORTANT)
-localStorage.setItem("user", JSON.stringify({
-  _id: data.user._id,
-  username: data.user.username,
-  email: data.user.email
-}));
+      // Save full user
+      localStorage.setItem("user", JSON.stringify(data.user));
 
+      // Setup socket AFTER login
+      socket.auth = { token: data.token };
+      socket.connect();
 
-socket.auth = { token: data.token };
-socket.connect();
+      navigate("/");   // or "/chat" depending on your routes
 
-navigate("/");
-
-      // Connect socket
-      
     } catch (err) {
       setError("Server error");
     }
@@ -83,3 +77,4 @@ navigate("/");
     </div>
   );
 }
+
