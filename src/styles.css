@@ -1,0 +1,105 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 20%;
+  background-color: white;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+/* Chat Window */
+.chat-window {
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.messages-area {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #fafafa;
+}
+
+.message-input-area {
+  padding: 15px;
+  border-top: 1px solid #ddd;
+  background: white;
+  display: flex;
+  gap: 10px;
+}
+
+.message-input-area input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.message-input-area button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Auth pages */
+.auth-container {
+  width: 350px;
+  margin: 80px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.auth-container h2 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.auth-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.auth-form button {
+  padding: 10px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
