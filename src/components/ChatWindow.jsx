@@ -7,80 +7,80 @@ export default function ChatWindow({ currentChannel }) {
   const [input, setInput] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const topRef = useRef(null);
+  const chatBottomRef = useRef(null);
 
   const PAGE_SIZE = 20;
 
   useEffect(() => {
-    setMessages([]);
-    setPage(1);
-    setHasMore(false);
     if (!currentChannel) return;
 
-    // load latest messages (page 1)
+    setMessages([]);
+    setPage(1);
     fetchPage(1);
 
-    // subscribe to live messages for this channel
     socket.on("new_message", handleIncoming);
+
     return () => socket.off("new_message", handleIncoming);
-    // eslint-disable-next-line
   }, [currentChannel]);
 
   async function fetchPage(p) {
     const token = localStorage.getItem("token");
-   const res = await fetch(
-   `${import.meta.env.VITE_BACKEND_URL}/api/messages/${currentChannel._id}?page=${p}&limit=${PAGE_SIZE}`,
-  {
-    headers: { Authorization: `Bearer ${token}` }
-  }
-);
+
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/messages/${currentChannel._id}?page=${p}&limit=${PAGE_SIZE}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
     if (!res.ok) return;
     const data = await res.json();
-    // server returns newest-first page; we want to display chronological
+
     if (p === 1) {
-      setMessages(data.messages.reverse()); // show oldest -> newest in viewport
+      setMessages(data.messages.reverse());
     } else {
-      // when loading older pages, prepend them
-      setMessages(prev => [...data.messages.reverse(), ...prev]);
+      setMessages((prev) => [...data.messages.reverse(), ...prev]);
     }
+
     setHasMore(data.hasMore);
     setPage(p);
+
+    // Scroll to bottom on first load
+    if (p === 1) {
+      setTimeout(() => {
+        chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
   }
 
   function handleIncoming(msg) {
-    // only append if message for current channel
-    if (msg.channel.toString() === currentChannel) {
-      setMessages(prev => [...prev, msg]);
-      // scroll to bottom
-      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
-    }
+    if (msg.channel.toString() !== currentChannel._id) return;
+
+    setMessages((prev) => [...prev, msg]);
+
+    setTimeout(() => {
+      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   }
 
   async function sendMessage(e) {
-  e.preventDefault();
-  if (!input.trim() || !currentChannel) return;
+    e.preventDefault();
+    if (!input.trim()) return;
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const userId =  user._id;  // <-- IMPORTANT FIX
+    if (!user._id) {
+      console.error("❌ No userId found in localStorage");
+      return;
+    }
 
-  if (!userId) {
-    console.error("❌ No userId found in localStorage");
-    return;
+    socket.emit("send_message", {
+      channelId: currentChannel._id,
+      text: input,
+      userId: user._id,
+      username: user.username
+    });
+
+    setInput("");
   }
-
-  socket.emit("send_message", {
-    channelId: currentChannel,
-    text: input,
-    userId,
-    username: user.username
-  });
-
-  setInput("");
-}
-
-
 
   return (
     <div className="chat-window">
@@ -88,27 +88,39 @@ export default function ChatWindow({ currentChannel }) {
         <p style={{ padding: 20 }}>Select a channel to start chatting.</p>
       ) : (
         <>
-          <div style={{ padding: 12, borderBottom: '1px solid #eee' }}>
-            <strong>Channel</strong>
+          <div className="chat-header">
+            <h3># {currentChannel.name}</h3>
           </div>
 
-          <div className="messages-area" style={{ padding: 15 }}>
+          <div className="messages-area">
             {hasMore && (
-              <button onClick={() => fetchPage(page + 1)}>Load older messages</button>
+              <button
+                className="load-btn"
+                onClick={() => fetchPage(page + 1)}
+              >
+                Load older messages
+              </button>
             )}
 
-            {messages.map(msg => (
+            {messages.map((msg) => (
               <div key={msg._id} className="message">
-                <strong>{msg.sender?.username}: </strong>
-                <span>{msg.text}</span>
-                <div style={{ fontSize: 11, color: '#666' }}>{new Date(msg.createdAt).toLocaleString()}</div>
+                <strong>{msg.sender?.username}:</strong>
+                <span> {msg.text}</span>
+                <div className="timestamp">
+                  {new Date(msg.createdAt).toLocaleString()}
+                </div>
               </div>
             ))}
-            <div ref={topRef} />
+
+            <div ref={chatBottomRef}></div>
           </div>
 
           <form className="message-input" onSubmit={sendMessage}>
-            <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." />
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type a message..."
+            />
             <button type="submit">Send</button>
           </form>
         </>
@@ -116,3 +128,4 @@ export default function ChatWindow({ currentChannel }) {
     </div>
   );
 }
+
