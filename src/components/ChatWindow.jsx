@@ -28,9 +28,13 @@ export default function ChatWindow({ currentChannel }) {
 
   async function fetchPage(p) {
     const token = localStorage.getItem("token");
-    const res = await fetch(`http://localhost:5000/api/messages/${currentChannel}?page=${p}&limit=${PAGE_SIZE}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+   const res = await fetch(
+  `https://realtime-chat-backend-jrp0.onrender.com/api/messages/${currentChannel}?page=${p}&limit=${PAGE_SIZE}`,
+  {
+    headers: { Authorization: `Bearer ${token}` }
+  }
+);
+
     if (!res.ok) return;
     const data = await res.json();
     // server returns newest-first page; we want to display chronological
