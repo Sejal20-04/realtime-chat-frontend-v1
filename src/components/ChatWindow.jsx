@@ -29,7 +29,7 @@ export default function ChatWindow({ currentChannel }) {
   async function fetchPage(p) {
     const token = localStorage.getItem("token");
    const res = await fetch(
-  `https://realtime-chat-backend-jrp0.onrender.com/api/messages/${currentChannel}?page=${p}&limit=${PAGE_SIZE}`,
+   `${import.meta.env.VITE_BACKEND_URL}/api/messages/${currentChannel._id}?page=${p}&limit=${PAGE_SIZE}`,
   {
     headers: { Authorization: `Bearer ${token}` }
   }
