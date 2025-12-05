@@ -13,11 +13,14 @@ export default function Register() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://realtime-chat-backend-jrp0.onrender.com/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password })
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password })
+        }
+      );
 
       const data = await res.json();
 
@@ -28,6 +31,7 @@ export default function Register() {
 
       alert("Account created!");
       navigate("/login");
+
     } catch (err) {
       setError("Server error");
     }
@@ -68,3 +72,4 @@ export default function Register() {
     </div>
   );
 }
+
